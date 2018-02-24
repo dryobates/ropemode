@@ -437,9 +437,20 @@ class GenerateFunction(_GenerateElement):
     key = 'n f'
 
 
-class GenerateClass(_GenerateElement):
+class GenerateClass(Refactoring):
     key = 'n c'
+    optionals = {'destination': dialog.Data('Destination module: ', None)}
 
+    def _calculate_changes(self, values, task_handle):
+        destination = values.get('destination')
+        destination = self.project.pycore.find_module(destination) if destination else None
+        self.generator = rope.contrib.generate.GenerateClass(
+            self.project, self.resource, self.offset, goal_resource=destination)
+        return self.generator.get_changes()
+
+    def _done(self):
+        resource, lineno = self.generator.get_location()
+        self.interface._goto_location(resource, lineno)
 
 class GenerateModule(_GenerateElement):
     key = 'n m'
